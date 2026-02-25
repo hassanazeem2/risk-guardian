@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GUARDIAN — Risk Intelligence</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@300;400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+:root {
+  --bg:        #09090B;
+  --bg-panel:  #0D0D0F;
+  --bg-inset:  #111114;
+  --bg-raised: #161619;
+  --rule:      rgba(255,255,255,0.08);
+  --rule-med:  rgba(255,255,255,0.12);
+  --rule-hi:   rgba(255,255,255,0.18);
+  --t0:        #F4F4F5;
+  --t1:        #A1A1AA;
+  --t2:        #71717A;
+  --t3:        #3F3F46;
+  --accent:    #E8A020;
+  --accent-dim: rgba(232,160,32,0.15);
+  --accent-line: rgba(232,160,32,0.35);
+  --crit:      #E05252;
+  --crit-dim:  rgba(224,82,82,0.12);
+  --high:      #D97706;
+  --med:       #6B7280;
+  --low:       #374151;
+  --good:      #4B8C6E;
+  --r: 4px;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'IBM Plex Sans', sans-serif;
+}
+
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg);
+  font-family: var(--sans);
+  overflow: hidden;
+  color: var(--t0);
+}
+
+/* ─── SHELL ─────────────────────────────── */
+.shell {
+  width: 100vw;
+  height: 100vh;
+  display: grid;
+  grid-template-columns: 52px 1fr;
+  grid-template-rows: 1fr;
+  overflow: hidden;
+  position: relative;
+}
+
+/* ─── SIDEBAR ────────────────────────────── */
+.sidebar {
+  border-right: 1px solid var(--rule);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 16px 0;
+  gap: 0;
+  background: var(--bg-panel);
+  position: relative;
+  z-index: 100;
+  pointer-events: all;
+}
+
+.logo-mark {
+  width: 28px; height: 28px;
+  border: 1px solid var(--rule-hi);
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 20px;
+  cursor: pointer;
+}
+.logo-mark span {
+  font-family: var(--mono);
+  font-size: 11px; font-weight: 600;
+  color: var(--accent);
+  letter-spacing: -0.5px;
+}
+
+.nav-items { display: flex; flex-direction: column; flex: 1; width: 100%; position: relative; z-index: 1; }
+
+.nav-btn {
+  width: 100%; height: 40px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  border: none; background: none;
+  border-left: 2px solid transparent;
+  transition: border-color 0.15s, background 0.15s;
+  position: relative;
+  -webkit-appearance: none;
+  appearance: none;
+  outline: none;
+  pointer-events: all;
+}
+.nav-btn:hover { background: var(--bg-inset); }
+.nav-btn.active {
+  border-left-color: var(--accent);
+  background: var(--accent-dim);
+}
+.nav-btn svg { width: 15px; height: 15px; stroke: var(--t2); stroke-width: 1.5; }
+.nav-btn.active svg { stroke: var(--accent); }
+
+.nav-dot {
+  position: absolute; top: 8px; right: 8px;
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--crit);
+}
+
+.nav-bottom { margin-top: auto; width: 100%; }
+
+/* ─── MAIN ───────────────────────────────── */
+.main {
+  display: grid;
+  grid-template-rows: 44px 1fr;
+  overflow: hidden;
+}
+
+/* ─── TOPBAR ─────────────────────────────── */
+.topbar {
+  border-bottom: 1px solid var(--rule);
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  gap: 0;
+  background: var(--bg-panel);
+}
+
+.topbar-title {
+  font-family: var(--mono);
+  font-size: 11px; font-weight: 500;
+  color: var(--t1);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding-right: 20px;
+  border-right: 1px solid var(--rule);
+  margin-right: 20px;
+}
+
+.topbar-path {
+  font-family: var(--mono);
+  font-size: 10px; color: var(--t3);
+  letter-spacing: 0.04em;
+  flex: 1;
+}
+.topbar-path span { color: var(--t2); }
+
+.topbar-right {
+  display: flex; align-items: center; gap: 16px;
+}
+
+.status-indicator {
+  display: flex; align-items: center; gap: 6px;
+  font-family: var(--mono); font-size: 10px; color: var(--t2);
+  letter-spacing: 0.06em;
+}
+.status-pip {
+  width: 6px; height: 6px;
+  background: var(--good);
+  animation: blink 3s ease-in-out infinite;
+}
+@keyframes blink { 0%,100%{opacity:1} 50%{opacity:0.3} }
+
+.topbar-clock {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--t1); letter-spacing: 0.08em;
+  padding-left: 16px;
+  border-left: 1px solid var(--rule);
+}
+
+.topbar-search {
+  display: flex; align-items: center; gap: 8px;
+  background: var(--bg-inset);
+  border: 1px solid var(--rule);
+  padding: 0 10px; height: 26px;
+}
+.topbar-search input {
+  background: none; border: none; outline: none;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--t1); width: 140px;
+}
+.topbar-search input::placeholder { color: var(--t3); }
+.topbar-search svg { width: 11px; height: 11px; stroke: var(--t3); stroke-width: 2; }
+
+.topbar-btn {
+  height: 26px; padding: 0 12px;
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-line);
+  font-family: var(--mono); font-size: 10px;
+  color: var(--accent); letter-spacing: 0.06em;
+  cursor: pointer; text-transform: uppercase;
+  transition: background 0.15s;
+}
+.topbar-btn:hover { background: rgba(232,160,32,0.25); }
+
+.avatar-sq {
+  width: 26px; height: 26px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule-hi);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  color: var(--t1); cursor: pointer; letter-spacing: 0.02em;
+}
+
+/* ─── CONTENT ────────────────────────────── */
+.content {
+  display: grid;
+  grid-template-columns: 1fr 260px 200px;
+  grid-template-rows: 1fr 1fr;
+  overflow: hidden;
+}
+
+/* ─── PANEL BASE ─────────────────────────── */
+.panel {
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  background: var(--bg-panel);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+.panel:last-child, .panel.no-right { border-right: none; }
+.panel.no-bottom { border-bottom: none; }
+.panel.inset { background: var(--bg-inset); }
+
+.panel-head {
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center;
+  padding: 0 14px;
+  height: 32px;
+  flex-shrink: 0;
+  gap: 12px;
+}
+
+.panel-label {
+  font-family: var(--mono);
+  font-size: 9px; font-weight: 500;
+  color: var(--t3);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.panel-label.accent { color: var(--accent); }
+
+.panel-id {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--t3); letter-spacing: 0.06em;
+  margin-left: auto;
+}
+
+.panel-seg {
+  display: flex; margin-left: auto;
+}
+.pseg {
+  height: 20px; padding: 0 8px;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--t2); letter-spacing: 0.06em;
+  cursor: pointer; background: none;
+  border: none; border-right: 1px solid var(--rule);
+  transition: color 0.15s, background 0.15s;
+}
+.pseg:last-child { border-right: none; }
+.pseg.active { color: var(--accent); background: var(--accent-dim); }
+.pseg:hover:not(.active) { color: var(--t1); }
+
+/* ─── PANEL 1: TIMELINE ──────────────────── */
+.p-timeline { grid-column: 1; grid-row: 1; }
+
+.timeline-meta {
+  padding: 12px 14px 8px;
+  display: flex; align-items: flex-end; gap: 20px;
+  flex-shrink: 0;
+}
+.tm-val {
+  font-family: var(--mono); font-size: 28px; font-weight: 300;
+  color: var(--t0); letter-spacing: -0.02em; line-height: 1;
+}
+.tm-unit { font-size: 12px; color: var(--t2); margin-left: 4px; }
+.tm-delta {
+  font-family: var(--mono); font-size: 11px;
+  color: var(--crit); padding-bottom: 2px;
+}
+.tm-delta.pos { color: var(--good); }
+.tm-range { font-family: var(--mono); font-size: 10px; color: var(--t3); padding-bottom: 2px; }
+
+.chart-container {
+  flex: 1; padding: 0 14px 8px; min-height: 0;
+  position: relative;
+}
+
+svg.sparkline { width: 100%; height: 100%; display: block; overflow: visible; }
+
+.chart-annotation {
+  position: absolute;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--accent);
+  pointer-events: none;
+  letter-spacing: 0.04em;
+  opacity: 0;
+  transition: opacity 0.1s ease;
+  z-index: 2;
+  padding: 6px 8px;
+  background: var(--bg-raised);
+  border: 1px solid var(--rule-med);
+  border-radius: var(--r);
+  white-space: nowrap;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+  left: 0;
+  top: 0;
+}
+.chart-annotation.visible { opacity: 1; }
+.chart-annotation .chart-tt-time { color: var(--t1); }
+.chart-annotation .chart-tt-all { color: var(--accent); }
+.chart-annotation .chart-tt-crit { color: var(--crit); margin-top: 2px; }
+.sparkline .chart-crosshair { pointer-events: none; }
+.sparkline .chart-hover-dot { pointer-events: none; }
+  top: 12%;
+  left: 51%;
+  border-left: 1px solid rgba(232,160,32,0.4);
+  padding-left: 4px;
+  line-height: 1.4;
+}
+
+.event-list {
+  border-top: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+
+.event-row {
+  display: flex; align-items: stretch;
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer;
+  transition: background 0.1s;
+  min-height: 32px;
+}
+.event-row:last-child { border-bottom: none; }
+.event-row:hover { background: var(--bg-inset); }
+
+.ev-sev {
+  width: 3px; flex-shrink: 0;
+}
+.ev-sev.crit { background: var(--crit); }
+.ev-sev.high { background: var(--high); }
+.ev-sev.med  { background: var(--t2); }
+
+.ev-badge {
+  width: 52px; display: flex; align-items: center; justify-content: center;
+  border-right: 1px solid var(--rule); flex-shrink: 0;
+}
+.ev-badge span {
+  font-family: var(--mono); font-size: 8px; font-weight: 600;
+  letter-spacing: 0.08em; text-transform: uppercase;
+}
+.ev-badge span.crit { color: var(--crit); }
+.ev-badge span.high { color: var(--high); }
+.ev-badge span.med  { color: var(--t2); }
+
+.ev-body {
+  flex: 1; padding: 6px 12px; display: flex; flex-direction: column; justify-content: center;
+  gap: 2px;
+}
+.ev-desc { font-size: 11px; color: var(--t1); font-weight: 400; line-height: 1.3; }
+.ev-meta { font-family: var(--mono); font-size: 9px; color: var(--t3); letter-spacing: 0.04em; }
+
+.ev-conf {
+  width: 48px; display: flex; align-items: center; justify-content: center;
+  border-left: 1px solid var(--rule); flex-shrink: 0;
+}
+.ev-conf span {
+  font-family: var(--mono); font-size: 10px; color: var(--t2);
+}
+
+.ev-action {
+  width: 32px; display: flex; align-items: center; justify-content: center;
+  border-left: 1px solid var(--rule); flex-shrink: 0;
+}
+.ev-action svg { width: 12px; height: 12px; stroke: var(--t3); stroke-width: 1.5; }
+
+/* ─── PANEL 2: SEVERITY ──────────────────── */
+.p-severity { grid-column: 2; grid-row: 1; }
+
+.sev-grid {
+  flex: 1; display: grid;
+  grid-template-rows: 1fr 1px 1fr 1px 1fr 1px 1fr;
+}
+.sev-div { background: var(--rule); }
+.sev-row {
+  display: flex; align-items: center;
+  padding: 0 14px; gap: 10px;
+  cursor: pointer; transition: background 0.1s;
+}
+.sev-row:hover { background: var(--bg-inset); }
+.sev-row.active-sev { background: var(--bg-raised); }
+
+.sev-label {
+  font-family: var(--mono); font-size: 9px;
+  text-transform: uppercase; letter-spacing: 0.1em;
+  width: 48px; flex-shrink: 0;
+}
+.sev-label.crit { color: var(--crit); }
+.sev-label.high { color: var(--high); }
+.sev-label.med  { color: var(--t2); }
+.sev-label.low  { color: var(--t3); }
+
+.sev-bar-track {
+  flex: 1; height: 2px; background: var(--rule);
+  position: relative; overflow: hidden;
+}
+.sev-bar-fill {
+  height: 100%; transition: width 1.4s cubic-bezier(0.4,0,0.2,1);
+  position: relative;
+}
+.sev-bar-fill.crit { background: var(--crit); }
+.sev-bar-fill.high { background: var(--high); }
+.sev-bar-fill.med  { background: var(--t2); }
+.sev-bar-fill.low  { background: var(--t3); }
+
+.sev-count {
+  font-family: var(--mono); font-size: 14px; font-weight: 300;
+  width: 24px; text-align: right; flex-shrink: 0;
+}
+.sev-count.crit { color: var(--crit); }
+.sev-count.high { color: var(--high); }
+.sev-count.med  { color: var(--t1); }
+.sev-count.low  { color: var(--t2); }
+
+.sev-total-block {
+  border-top: 1px solid var(--rule-med);
+  display: flex; align-items: center;
+  padding: 0 14px;
+  flex-shrink: 0;
+  height: 40px; gap: 8px;
+}
+.sev-total-num {
+  font-family: var(--mono); font-size: 22px; font-weight: 300; color: var(--t0);
+}
+.sev-total-label {
+  font-family: var(--mono); font-size: 9px; color: var(--t3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  line-height: 1.4;
+}
+
+/* ─── PANEL 3: ANALYZE ───────────────────── */
+.p-analyze { grid-column: 3; grid-row: 1; position: relative; }
+
+.analyze-form {
+  flex: 1; display: flex; flex-direction: column;
+  padding: 12px;
+  gap: 8px; min-height: 0;
+}
+
+.field-label {
+  font-family: var(--mono); font-size: 9px;
+  color: var(--t3); text-transform: uppercase;
+  letter-spacing: 0.1em; margin-bottom: 3px;
+}
+
+.field-select {
+  background: var(--bg-inset);
+  border: 1px solid var(--rule);
+  padding: 0 8px; height: 26px;
+  font-family: var(--mono); font-size: 10px;
+  color: var(--t1); width: 100%; outline: none;
+  cursor: pointer;
+  -webkit-appearance: none; appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg width='8' height='5' viewBox='0 0 8 5' fill='none' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1L4 4L7 1' stroke='%2371717A' stroke-width='1.2'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 8px center;
+}
+.field-select option { background: #0D0D0F; }
+.field-select:focus { border-color: var(--accent-line); }
+
+.field-textarea {
+  background: var(--bg-inset);
+  border: 1px solid var(--rule);
+  padding: 7px 8px;
+  font-family: var(--mono); font-size: 9px;
+  color: var(--t1); width: 100%; outline: none;
+  resize: none; flex: 1; min-height: 0;
+  line-height: 1.6; letter-spacing: 0.02em;
+}
+.field-textarea::placeholder { color: var(--t3); }
+.field-textarea:focus { border-color: var(--accent-line); }
+
+.analyze-run {
+  height: 32px; width: 100%;
+  background: var(--bg);
+  border: 1px solid var(--rule-hi);
+  font-family: var(--mono); font-size: 10px;
+  color: var(--t0); letter-spacing: 0.1em;
+  text-transform: uppercase; cursor: pointer;
+  transition: all 0.15s; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+}
+.analyze-run:hover {
+  border-color: var(--accent-line);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.analyze-run:active { transform: translateY(1px); }
+
+/* OUTPUT OVERLAY */
+.output-overlay {
+  position: absolute; inset: 0;
+  background: var(--bg-panel);
+  border-top: 2px solid var(--accent);
+  display: none; flex-direction: column;
+  z-index: 10;
+}
+.output-overlay.visible { display: flex; }
+
+.output-head {
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center;
+  padding: 0 12px; height: 32px; gap: 8px; flex-shrink: 0;
+}
+.output-sev-tag {
+  font-family: var(--mono); font-size: 9px; font-weight: 600;
+  letter-spacing: 0.1em; text-transform: uppercase;
+  padding: 2px 6px; border: 1px solid;
+}
+.output-sev-tag.Critical { color: var(--crit); border-color: rgba(224,82,82,0.35); background: var(--crit-dim); }
+.output-sev-tag.High { color: var(--high); border-color: rgba(217,119,6,0.35); background: rgba(217,119,6,0.1); }
+.output-sev-tag.Medium { color: var(--t1); border-color: var(--rule-hi); background: transparent; }
+.output-sev-tag.Low { color: var(--t2); border-color: var(--rule); background: transparent; }
+.output-sev-tag.CLEAR { color: var(--good); border-color: rgba(75,140,110,0.35); background: rgba(75,140,110,0.08); }
+
+.output-close {
+  margin-left: auto; background: none; border: none;
+  cursor: pointer; padding: 4px;
+}
+.output-close svg { width: 12px; height: 12px; stroke: var(--t2); stroke-width: 2; }
+
+.output-body { flex: 1; overflow-y: auto; padding: 10px 12px; }
+
+.output-loading {
+  display: flex; align-items: center; justify-content: center;
+  flex: 1; gap: 8px;
+}
+.output-loading-bar {
+  width: 80px; height: 1px;
+  background: var(--rule);
+  position: relative; overflow: hidden;
+}
+.output-loading-bar::after {
+  content: '';
+  position: absolute; top: 0; left: -40px; width: 40px; height: 1px;
+  background: var(--accent);
+  animation: scan 1s linear infinite;
+}
+@keyframes scan { to { left: 100%; } }
+.output-loading span { font-family: var(--mono); font-size: 9px; color: var(--t3); letter-spacing: 0.1em; }
+
+/* Result fields */
+.rf-row {
+  margin-bottom: 10px;
+}
+.rf-key {
+  font-family: var(--mono); font-size: 8px; color: var(--t3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+  margin-bottom: 3px;
+  padding-bottom: 2px;
+  border-bottom: 1px solid var(--rule);
+}
+.rf-val {
+  font-family: var(--mono); font-size: 9px; color: var(--t1);
+  line-height: 1.6; letter-spacing: 0.02em;
+}
+.rf-val.accent { color: var(--accent); font-size: 13px; font-weight: 300; }
+.rf-val.crit { color: var(--crit); }
+.rf-val.good { color: var(--good); }
+
+.rf-tags { display: flex; flex-wrap: wrap; gap: 4px; }
+.rf-tag {
+  font-family: var(--mono); font-size: 8px; color: var(--t2);
+  border: 1px solid var(--rule); padding: 2px 5px;
+  letter-spacing: 0.06em; text-transform: uppercase;
+}
+
+.rf-action-block {
+  background: var(--bg-inset); border: 1px solid var(--rule-med);
+  border-left: 2px solid var(--accent);
+  padding: 7px 9px;
+  font-family: var(--mono); font-size: 9px; color: var(--t1);
+  line-height: 1.6;
+}
+
+/* ─── PANEL 4: KPI OPEN ──────────────────── */
+.p-kpi-open { grid-column: 1; grid-row: 2; }
+
+.kpi-inner {
+  display: grid;
+  grid-template-columns: 1fr 1px 1fr 1px 1fr 1px 1fr;
+  flex: 1;
+}
+.kpi-div { background: var(--rule); }
+.kpi-cell {
+  display: flex; flex-direction: column;
+  justify-content: space-between;
+  padding: 14px 16px;
+}
+.kpi-cell-label {
+  font-family: var(--mono); font-size: 8px;
+  color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.kpi-cell-value {
+  font-family: var(--mono); font-size: 28px; font-weight: 300;
+  color: var(--t0); line-height: 1; letter-spacing: -0.02em;
+}
+.kpi-cell-value.accent { color: var(--accent); }
+.kpi-cell-value.crit { color: var(--crit); }
+.kpi-cell-value.good { color: var(--good); }
+.kpi-cell-sub {
+  font-family: var(--mono); font-size: 9px; color: var(--t3);
+  letter-spacing: 0.04em;
+}
+
+/* minibar in cell */
+.mini-bars { display: flex; flex-direction: column; gap: 4px; }
+.mini-bar-row { display: flex; align-items: center; gap: 6px; }
+.mini-bar-label { font-family: var(--mono); font-size: 8px; color: var(--t3); width: 28px; }
+.mini-bar-track { flex: 1; height: 1px; background: var(--rule); }
+.mini-bar-fill { height: 1px; transition: width 1.4s cubic-bezier(0.4,0,0.2,1); }
+.mini-bar-fill.crit { background: var(--crit); }
+.mini-bar-fill.high { background: var(--high); }
+.mini-bar-fill.med  { background: var(--t2); }
+.mini-bar-fill.low  { background: var(--t3); }
+.mini-bar-num { font-family: var(--mono); font-size: 8px; color: var(--t2); width: 14px; text-align: right; }
+
+/* ─── PANEL 5: CATEGORY RING ─────────────── */
+.p-category { grid-column: 2; grid-row: 2; }
+
+.category-inner { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+.cat-ring-area {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  padding: 12px; min-height: 0;
+  position: relative;
+}
+
+.cat-ring-svg { width: 100%; height: 100%; max-width: 120px; max-height: 120px; }
+
+.cat-ring-center {
+  position: absolute;
+  display: flex; flex-direction: column; align-items: center;
+  pointer-events: none;
+}
+.cat-ring-num {
+  font-family: var(--mono); font-size: 18px; font-weight: 300;
+  color: var(--t0); letter-spacing: -0.02em;
+}
+.cat-ring-sub {
+  font-family: var(--mono); font-size: 8px; color: var(--t3);
+  text-transform: uppercase; letter-spacing: 0.1em;
+}
+
+.cat-table {
+  border-top: 1px solid var(--rule);
+  flex-shrink: 0;
+}
+.cat-row {
+  display: flex; align-items: center;
+  border-bottom: 1px solid var(--rule); padding: 5px 14px; gap: 8px;
+}
+.cat-row:last-child { border-bottom: none; }
+.cat-tick { width: 6px; height: 6px; flex-shrink: 0; }
+.cat-tick.fin { background: var(--accent); }
+.cat-tick.sec { background: var(--t1); }
+.cat-tick.comp { background: var(--crit); }
+.cat-tick.ops { background: var(--t2); }
+.cat-name { font-family: var(--mono); font-size: 9px; color: var(--t2); flex: 1; }
+.cat-pct {
+  font-family: var(--mono); font-size: 10px; color: var(--t1);
+  width: 28px; text-align: right;
+}
+.cat-track { width: 40px; height: 1px; background: var(--rule); position: relative; }
+.cat-fill { height: 1px; }
+.cat-fill.fin { background: var(--accent); }
+.cat-fill.sec { background: var(--t1); }
+.cat-fill.comp { background: var(--crit); }
+.cat-fill.ops { background: var(--t2); }
+
+/* ─── PANEL 6: DEPT CHART ────────────────── */
+.p-dept { grid-column: 3; grid-row: 2; }
+
+.dept-inner {
+  flex: 1; padding: 10px 14px;
+  display: flex; flex-direction: column; gap: 0;
+  justify-content: space-around;
+}
+.dept-row { display: flex; align-items: center; gap: 8px; }
+.dept-name {
+  font-family: var(--mono); font-size: 8px; color: var(--t3);
+  width: 54px; text-align: right; flex-shrink: 0;
+  text-transform: uppercase; letter-spacing: 0.06em;
+}
+.dept-track {
+  flex: 1; height: 1px; background: var(--rule); position: relative; overflow: visible;
+}
+.dept-fill {
+  height: 1px; transition: width 1.4s cubic-bezier(0.4,0,0.2,1);
+}
+.dept-fill.c { background: var(--crit); }
+.dept-fill.h { background: var(--high); }
+.dept-fill.m { background: var(--t2); }
+.dept-fill.l { background: var(--t3); }
+.dept-count {
+  font-family: var(--mono); font-size: 10px; color: var(--t1);
+  width: 18px; text-align: right; flex-shrink: 0;
+}
+
+/* ─── SCROLLBAR ──────────────────────────── */
+::-webkit-scrollbar { width: 3px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--rule-med); }
+
+/* ─── ENTRANCE ANIMATION ─────────────────── */
+.panel, .topbar, .sidebar {
+  animation: fadeIn 0.4s ease both;
+}
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+/* Stagger panels */
+.p-timeline { animation-delay: 0.05s; }
+.p-severity  { animation-delay: 0.1s; }
+.p-analyze   { animation-delay: 0.15s; }
+.p-kpi-open  { animation-delay: 0.2s; }
+.p-category  { animation-delay: 0.25s; }
+.p-dept      { animation-delay: 0.3s; }
+
+/* ─── VIEW SYSTEM ────────────────────────── */
+.view-overlay {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: var(--bg-panel);
+  z-index: 50;
+  flex-direction: column;
+  overflow: hidden;
+  animation: fadeIn 0.18s ease both;
+}
+.view-overlay.active { display: flex; }
+
+.view-topbar {
+  height: 44px;
+  border-bottom: 1px solid var(--rule);
+  display: flex; align-items: center;
+  padding: 0 20px; gap: 16px; flex-shrink: 0;
+  background: var(--bg-panel);
+}
+.view-title {
+  font-family: var(--mono); font-size: 11px; font-weight: 500;
+  color: var(--t1); text-transform: uppercase; letter-spacing: 0.1em;
+}
+.view-path {
+  font-family: var(--mono); font-size: 10px; color: var(--t3);
+}
+.view-back {
+  margin-left: auto;
+  height: 24px; padding: 0 10px;
+  background: none; border: 1px solid var(--rule);
+  font-family: var(--mono); font-size: 9px; color: var(--t2);
+  letter-spacing: 0.08em; text-transform: uppercase;
+  cursor: pointer; transition: all 0.15s;
+}
+.view-back:hover { border-color: var(--accent-line); color: var(--accent); }
+
+.view-body {
+  flex: 1; overflow-y: auto; padding: 0;
+}
+
+/* ─── ALERTS VIEW ────────────────────────── */
+.alert-table { width: 100%; border-collapse: collapse; }
+.alert-table thead tr {
+  border-bottom: 1px solid var(--rule-med);
+}
+.alert-table th {
+  font-family: var(--mono); font-size: 8px; font-weight: 500;
+  color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em;
+  padding: 8px 16px; text-align: left;
+  border-right: 1px solid var(--rule);
+}
+.alert-table th:last-child { border-right: none; }
+.alert-table tbody tr {
+  border-bottom: 1px solid var(--rule);
+  cursor: pointer; transition: background 0.1s;
+}
+.alert-table tbody tr:hover { background: var(--bg-inset); }
+.alert-table td {
+  font-family: var(--mono); font-size: 10px; color: var(--t1);
+  padding: 9px 16px;
+  border-right: 1px solid var(--rule);
+  vertical-align: middle;
+}
+.alert-table td:last-child { border-right: none; }
+.at-sev {
+  display: inline-block;
+  font-size: 8px; font-weight: 600; letter-spacing: 0.08em;
+  padding: 2px 5px; border: 1px solid;
+}
+.at-sev.Critical { color: var(--crit); border-color: rgba(224,82,82,0.3); background: var(--crit-dim); }
+.at-sev.High { color: var(--high); border-color: rgba(217,119,6,0.3); background: rgba(217,119,6,0.08); }
+.at-sev.Medium { color: var(--t1); border-color: var(--rule-hi); }
+.at-sev.Low { color: var(--t2); border-color: var(--rule); }
+.at-source { color: var(--t2); font-size: 9px; }
+.at-conf { color: var(--accent); }
+.at-time { color: var(--t3); font-size: 9px; }
+.at-int { display: inline-block; width: 8px; height: 8px; border-radius: 50%; }
+.at-int.yes { background: var(--crit); }
+.at-int.no  { background: var(--t3); }
+
+/* ─── POLICY VIEW ────────────────────────── */
+.policy-grid {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  height: 100%;
+}
+.policy-list {
+  border-right: 1px solid var(--rule);
+  overflow-y: auto;
+}
+.policy-list-item {
+  border-bottom: 1px solid var(--rule);
+  padding: 10px 14px;
+  cursor: pointer; transition: background 0.1s;
+  border-left: 2px solid transparent;
+}
+.policy-list-item:hover { background: var(--bg-inset); }
+.policy-list-item.selected {
+  border-left-color: var(--accent);
+  background: var(--bg-raised);
+}
+.pli-name { font-family: var(--mono); font-size: 10px; color: var(--t1); }
+.pli-cat  { font-family: var(--mono); font-size: 8px; color: var(--t3); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.08em; }
+.policy-detail { padding: 20px; overflow-y: auto; }
+.pd-title { font-family: var(--mono); font-size: 13px; color: var(--t0); margin-bottom: 4px; }
+.pd-meta  { font-family: var(--mono); font-size: 9px; color: var(--t3); margin-bottom: 16px; letter-spacing: 0.06em; }
+.pd-section { margin-bottom: 14px; }
+.pd-section-label { font-family: var(--mono); font-size: 8px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid var(--rule); padding-bottom: 4px; margin-bottom: 6px; }
+.pd-section-body { font-family: var(--mono); font-size: 10px; color: var(--t1); line-height: 1.7; }
+.pd-rule { display: flex; gap: 8px; margin-bottom: 4px; }
+.pd-rule::before { content: '—'; color: var(--t3); flex-shrink: 0; }
+
+/* ─── WORKFLOWS VIEW ─────────────────────── */
+.wf-list { padding: 0; }
+.wf-item {
+  border-bottom: 1px solid var(--rule);
+  padding: 12px 20px;
+  display: grid;
+  grid-template-columns: 160px 1fr 80px 80px 60px;
+  align-items: center; gap: 16px;
+  cursor: pointer; transition: background 0.1s;
+}
+.wf-item:hover { background: var(--bg-inset); }
+.wf-item.header { background: var(--bg-inset); cursor: default; }
+.wf-item.header:hover { background: var(--bg-inset); }
+.wf-cell { font-family: var(--mono); font-size: 10px; color: var(--t1); }
+.wf-cell.label { font-size: 8px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; }
+.wf-cell.dim { color: var(--t2); }
+.wf-cell.mono-sm { font-size: 9px; color: var(--t3); }
+.wf-status {
+  display: inline-block;
+  font-size: 8px; font-weight: 600; letter-spacing: 0.08em;
+  padding: 2px 5px; border: 1px solid; text-transform: uppercase;
+}
+.wf-status.open     { color: var(--crit); border-color: rgba(224,82,82,0.3); background: var(--crit-dim); }
+.wf-status.review   { color: var(--high); border-color: rgba(217,119,6,0.3); background: rgba(217,119,6,0.08); }
+.wf-status.resolved { color: var(--good); border-color: rgba(75,140,110,0.3); background: rgba(75,140,110,0.08); }
+.wf-status.pending  { color: var(--t2); border-color: var(--rule); }
+
+/* ─── AUDIT VIEW ─────────────────────────── */
+.audit-row {
+  display: grid;
+  grid-template-columns: 120px 80px 120px 1fr 60px;
+  border-bottom: 1px solid var(--rule);
+  padding: 7px 20px; gap: 16px; align-items: center;
+  transition: background 0.1s; cursor: default;
+}
+.audit-row.head { background: var(--bg-inset); }
+.audit-cell { font-family: var(--mono); font-size: 10px; color: var(--t1); }
+.audit-cell.label { font-size: 8px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; }
+.audit-cell.dim { color: var(--t2); font-size: 9px; }
+.audit-cell.path { color: var(--t3); font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ─── SETTINGS VIEW ─────────────────────── */
+.settings-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0;
+  height: 100%;
+}
+.settings-section {
+  border-right: 1px solid var(--rule);
+  border-bottom: 1px solid var(--rule);
+  padding: 20px;
+}
+.settings-section:nth-child(2n) { border-right: none; }
+.ss-title { font-family: var(--mono); font-size: 9px; color: var(--t3); text-transform: uppercase; letter-spacing: 0.1em; border-bottom: 1px solid var(--rule); padding-bottom: 8px; margin-bottom: 12px; }
+.ss-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.ss-label { font-family: var(--mono); font-size: 10px; color: var(--t1); }
+.ss-val { font-family: var(--mono); font-size: 10px; color: var(--t2); }
+.ss-toggle {
+  width: 28px; height: 14px;
+  background: var(--bg-inset); border: 1px solid var(--rule-hi);
+  position: relative; cursor: pointer; flex-shrink: 0;
+  transition: background 0.2s;
+}
+.ss-toggle.on { background: var(--accent-dim); border-color: var(--accent-line); }
+.ss-toggle::after {
+  content: '';
+  position: absolute; top: 2px; left: 2px;
+  width: 8px; height: 8px;
+  background: var(--t3); transition: left 0.2s, background 0.2s;
+}
+.ss-toggle.on::after { left: 16px; background: var(--accent); }
+
+/* Clickable nav elements (overview → other views) */
+[data-nav] { cursor: pointer; transition: color 0.15s, background 0.15s, opacity 0.15s; }
+[data-nav]:hover { opacity: 0.9; }
+.tm-val[data-nav]:hover, .kpi-cell[data-nav]:hover .kpi-cell-value,
+.sev-row[data-nav]:hover .sev-count, .sev-total-block[data-nav]:hover .sev-total-num,
+.cat-row[data-nav]:hover .cat-name, .dept-row[data-nav]:hover .dept-name { color: var(--accent); }
+.mini-bar-row[data-nav]:hover .mini-bar-label { color: var(--accent); }
+.event-row[data-nav] { cursor: pointer; }
+.event-row[data-nav]:hover { background: var(--bg-raised); }
+</style>
+</head>
+<body>
+
+<div class="shell">
+
+  <!-- SIDEBAR -->
+  <aside class="sidebar">
+    <div class="logo-mark"><span>G/</span></div>
+    <nav class="nav-items">
+      <button class="nav-btn active" data-view="overview" title="Overview">
+        <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </button>
+      <button class="nav-btn" data-view="alerts" title="Alerts">
+        <div class="nav-dot"></div>
+        <svg viewBox="0 0 24 24" fill="none"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      </button>
+      <button class="nav-btn" data-view="policy" title="Policy">
+        <svg viewBox="0 0 24 24" fill="none"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14,2 14,8 20,8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+      </button>
+      <button class="nav-btn" data-view="workflows" title="Workflows">
+        <svg viewBox="0 0 24 24" fill="none"><polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/></svg>
+      </button>
+      <button class="nav-btn" data-view="audit" title="Audit Log">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>
+      </button>
+    </nav>
+    <div class="nav-bottom">
+      <button class="nav-btn" data-view="settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+      </button>
+    </div>
+  </aside>
+
+  <!-- MAIN AREA -->
+  <div class="main">
+
+    <!-- TOPBAR -->
+    <div class="topbar">
+      <span class="topbar-title" data-nav onclick="showView('overview')" title="Back to overview">GUARDIAN</span>
+      <span class="topbar-path" data-nav onclick="showView('overview')" title="Back to overview">risk / <span>overview</span> / live</span>
+      <div class="topbar-right">
+        <div class="status-indicator">
+          <div class="status-pip"></div>
+          <span>MONITORING</span>
+        </div>
+        <div class="topbar-search">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+          <input type="text" placeholder="search events / users / policy…">
+        </div>
+        <button class="topbar-btn" onclick="document.getElementById('eventInput').focus()">+ Scan</button>
+        <span class="topbar-clock" id="topbar-clock">--:--:--</span>
+        <div class="avatar-sq">SR</div>
+      </div>
+    </div>
+
+    <!-- CONTENT GRID -->
+    <div class="content">
+
+      <!-- ── TIMELINE ── -->
+      <div class="panel p-timeline">
+        <div class="panel-head">
+          <span class="panel-label">Risk Event Timeline</span>
+          <div class="panel-seg">
+            <button class="pseg" data-range="6H">6H</button>
+            <button class="pseg active" data-range="24H">24H</button>
+            <button class="pseg" data-range="7D">7D</button>
+            <button class="pseg" data-range="30D">30D</button>
+          </div>
+          <span class="panel-id">— 001</span>
+        </div>
+        <div class="timeline-meta">
+          <div>
+            <span class="tm-val" data-nav onclick="showView('alerts')" title="View all alerts">47<span class="tm-unit">ev</span></span>
+          </div>
+          <span class="tm-range" id="timelineRangeLabel">Range: 24H</span>
+          <span class="tm-delta" data-nav onclick="showView('alerts')">↑ +12 today</span>
+          <span class="tm-delta pos" data-nav onclick="showView('audit')">↓ −8% vs prior</span>
+        </div>
+        <div class="chart-container" id="timelineChartContainer">
+          <svg class="sparkline" id="timelineSparkline" viewBox="0 0 600 80" preserveAspectRatio="none">
+            <!-- Hairline grid -->
+            <line x1="0" y1="20" x2="600" y2="20" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="40" x2="600" y2="40" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <line x1="0" y1="60" x2="600" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+            <!-- Vertical axis ticks -->
+            <line x1="0" y1="0" x2="0" y2="76" stroke="rgba(255,255,255,0.06)" stroke-width="1"/>
+            <!-- Critical line (dashed) -->
+            <path d="M0,65 L60,61 L120,67 L180,58 L240,63 L300,54 L340,60 L400,52 L460,56 L520,48 L580,51"
+              fill="none" stroke="var(--crit)" stroke-width="0.8"
+              stroke-dasharray="3,4" opacity="0.6"/>
+            <!-- Main risk line (yellow) -->
+            <path id="timelinePathAll" d="M0,58 L60,47 L120,52 L180,33 L240,39 L300,22 L340,31 L400,14 L460,26 L520,18 L560,20 L600,15"
+              fill="none" stroke="var(--accent)" stroke-width="1.2"/>
+            <!-- Hover: crosshair and dot (positioned by JS) -->
+            <line id="chartCrosshair" class="chart-crosshair" x1="0" y1="0" x2="0" y2="76" stroke="rgba(232,160,32,0.35)" stroke-width="1" style="visibility:hidden"/>
+            <rect id="chartHoverDot" class="chart-hover-dot" x="0" y="0" width="6" height="6" rx="1" fill="var(--accent)" style="visibility:hidden"/>
+            <!-- X axis labels -->
+            <text x="2" y="76" font-size="7" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono">00:00</text>
+            <text x="104" y="76" font-size="7" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono">04:00</text>
+            <text x="207" y="76" font-size="7" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono">08:00</text>
+            <text x="310" y="76" font-size="7" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono">12:00</text>
+            <text x="413" y="76" font-size="7" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono">16:00</text>
+            <text x="517" y="76" font-size="7" fill="rgba(255,255,255,0.2)" font-family="IBM Plex Mono">20:00</text>
+            <!-- Legend -->
+            <line x1="500" y1="8" x2="516" y2="8" stroke="var(--accent)" stroke-width="1.2"/>
+            <text x="519" y="11" font-size="7" fill="rgba(232,160,32,0.7)" font-family="IBM Plex Mono">ALL</text>
+            <line x1="540" y1="8" x2="556" y2="8" stroke="var(--crit)" stroke-width="0.8" stroke-dasharray="3,4" opacity="0.6"/>
+            <text x="559" y="11" font-size="7" fill="rgba(224,82,82,0.7)" font-family="IBM Plex Mono">CRIT</text>
+            <!-- Invisible overlay for mouse -->
+            <rect width="600" height="80" fill="transparent" style="cursor:crosshair" id="chartOverlay"/>
+          </svg>
+          <div class="chart-annotation" id="chartTooltip">
+            <div class="chart-tt-time" id="chartTtTime">--:--</div>
+            <div class="chart-tt-all" id="chartTtAll">ALL: 0 events</div>
+            <div class="chart-tt-crit" id="chartTtCrit">CRIT: 0 events</div>
+          </div>
+        </div>
+        <div class="event-list">
+          <div class="event-row" data-nav onclick="showView('alerts', {severity:'Critical'})" title="View critical alerts">
+            <div class="ev-sev crit"></div>
+            <div class="ev-badge"><span class="crit">CRIT</span></div>
+            <div class="ev-body">
+              <span class="ev-desc">Vendor payment $2.3M bypassed dual-approval policy</span>
+              <span class="ev-meta">finance · tx-8821 · 14:32 UTC</span>
+            </div>
+            <div class="ev-conf"><span>97%</span></div>
+            <div class="ev-action"><svg viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="event-row" data-nav onclick="showView('alerts', {severity:'High'})" title="View high-severity alerts">
+            <div class="ev-sev high"></div>
+            <div class="ev-badge"><span class="high">HIGH</span></div>
+            <div class="ev-body">
+              <span class="ev-desc">Production deployment without change control ticket</span>
+              <span class="ev-meta">engineering · deploy-5943 · 13:11 UTC</span>
+            </div>
+            <div class="ev-conf"><span>89%</span></div>
+            <div class="ev-action"><svg viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+          <div class="event-row" data-nav onclick="showView('alerts', {severity:'Medium'})" title="View medium-severity alerts">
+            <div class="ev-sev med"></div>
+            <div class="ev-badge"><span class="med">MED</span></div>
+            <div class="ev-body">
+              <span class="ev-desc">PII field accessed by unauthorized user role</span>
+              <span class="ev-meta">security · log-22890 · 11:47 UTC</span>
+            </div>
+            <div class="ev-conf"><span>76%</span></div>
+            <div class="ev-action"><svg viewBox="0 0 24 24" fill="none"><polyline points="9 18 15 12 9 6"/></svg></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── SEVERITY ── -->
+      <div class="panel p-severity">
+        <div class="panel-head">
+          <span class="panel-label">Severity</span>
+          <span class="panel-id">— 002</span>
+        </div>
+        <div class="sev-grid">
+          <div class="sev-row active-sev" data-nav onclick="showView('alerts', {severity:'Critical'})" title="View critical alerts">
+            <span class="sev-label crit">CRIT</span>
+            <div class="sev-bar-track"><div class="sev-bar-fill crit" style="width:0%" data-w="82%"></div></div>
+            <span class="sev-count crit">12</span>
+          </div>
+          <div class="sev-div"></div>
+          <div class="sev-row" data-nav onclick="showView('alerts', {severity:'High'})" title="View high alerts">
+            <span class="sev-label high">HIGH</span>
+            <div class="sev-bar-track"><div class="sev-bar-fill high" style="width:0%" data-w="100%"></div></div>
+            <span class="sev-count high">15</span>
+          </div>
+          <div class="sev-div"></div>
+          <div class="sev-row" data-nav onclick="showView('alerts', {severity:'Medium'})" title="View medium alerts">
+            <span class="sev-label med">MED</span>
+            <div class="sev-bar-track"><div class="sev-bar-fill med" style="width:0%" data-w="87%"></div></div>
+            <span class="sev-count med">13</span>
+          </div>
+          <div class="sev-div"></div>
+          <div class="sev-row" data-nav onclick="showView('alerts', {severity:'Low'})" title="View low alerts">
+            <span class="sev-label low">LOW</span>
+            <div class="sev-bar-track"><div class="sev-bar-fill low" style="width:0%" data-w="47%"></div></div>
+            <span class="sev-count low">7</span>
+          </div>
+        </div>
+        <div class="sev-total-block" data-nav onclick="showView('alerts')" title="View all open risks">
+          <span class="sev-total-num">47</span>
+          <div>
+            <div class="sev-total-label">Total</div>
+            <div class="sev-total-label">Open Risks</div>
+          </div>
+          <div style="margin-left:auto;text-align:right;">
+            <div style="font-family:var(--mono);font-size:9px;color:var(--crit);">↑ 12 new</div>
+            <div style="font-family:var(--mono);font-size:9px;color:var(--t3);">since 00:00</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── ANALYZE ── -->
+      <div class="panel p-analyze">
+        <div class="panel-head">
+          <span class="panel-label">Analyze Event</span>
+          <span class="panel-id">— 003</span>
+        </div>
+        <div class="analyze-form">
+          <div>
+            <div class="field-label">Source</div>
+            <select class="field-select" id="sourceType">
+              <option value="payment">Payment / Transaction</option>
+              <option value="slack">Slack / Teams</option>
+              <option value="deploy">Deployment Log</option>
+              <option value="crm">CRM Deal Update</option>
+              <option value="access">Access Log</option>
+              <option value="hr">HR Event</option>
+              <option value="contract">Contract Excerpt</option>
+            </select>
+          </div>
+          <div style="flex:1;display:flex;flex-direction:column;min-height:0;">
+            <div class="field-label">Event Data</div>
+            <textarea class="field-textarea" id="eventInput" placeholder="paste log, message, transaction or workflow snapshot…"></textarea>
+          </div>
+          <button class="analyze-run" onclick="analyzeEvent()">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><polygon points="5,3 19,12 5,21"/></svg>
+            Execute Analysis
+          </button>
+        </div>
+
+        <!-- OUTPUT OVERLAY -->
+        <div class="output-overlay" id="outputOverlay">
+          <div class="output-head">
+            <span style="font-family:var(--mono);font-size:9px;color:var(--t3);text-transform:uppercase;letter-spacing:0.1em;">Result</span>
+            <div id="outputSevTag"></div>
+            <button class="output-close" onclick="closeOutput()">
+              <svg viewBox="0 0 24 24" fill="none"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
+          </div>
+          <div class="output-body" id="outputBody">
+            <div class="output-loading" id="outputLoading">
+              <span>PROCESSING</span>
+              <div class="output-loading-bar"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── KPI STRIP ── -->
+      <div class="panel p-kpi-open no-bottom">
+        <div class="panel-head">
+          <span class="panel-label">Operational Metrics</span>
+          <span class="panel-id">— 004</span>
+        </div>
+        <div class="kpi-inner">
+          <div class="kpi-cell" data-nav onclick="showView('alerts')" title="View open risks">
+            <span class="kpi-cell-label">Open Risks</span>
+            <span class="kpi-cell-value crit">47</span>
+            <span class="kpi-cell-sub">↑ 12 since 00:00</span>
+          </div>
+          <div class="kpi-div"></div>
+          <div class="kpi-cell">
+            <span class="kpi-cell-label">Risk Distribution</span>
+            <div class="mini-bars" style="margin-top:4px;">
+              <div class="mini-bar-row" data-nav onclick="showView('alerts', {severity:'Critical'})" title="View critical risks">
+                <span class="mini-bar-label">CRIT</span>
+                <div class="mini-bar-track"><div class="mini-bar-fill crit" style="width:0%" data-w="82%"></div></div>
+                <span class="mini-bar-num">12</span>
+              </div>
+              <div class="mini-bar-row" data-nav onclick="showView('alerts', {severity:'High'})" title="View high risks">
+                <span class="mini-bar-label">HIGH</span>
+                <div class="mini-bar-track"><div class="mini-bar-fill high" style="width:0%" data-w="100%"></div></div>
+                <span class="mini-bar-num">15</span>
+              </div>
+              <div class="mini-bar-row" data-nav onclick="showView('alerts', {severity:'Medium'})" title="View medium risks">
+                <span class="mini-bar-label">MED</span>
+                <div class="mini-bar-track"><div class="mini-bar-fill med" style="width:0%" data-w="87%"></div></div>
+                <span class="mini-bar-num">13</span>
+              </div>
+              <div class="mini-bar-row" data-nav onclick="showView('alerts', {severity:'Low'})" title="View low risks">
+                <span class="mini-bar-label">LOW</span>
+                <div class="mini-bar-track"><div class="mini-bar-fill low" style="width:0%" data-w="47%"></div></div>
+                <span class="mini-bar-num">7</span>
+              </div>
+            </div>
+            <span class="kpi-cell-sub" style="margin-top:auto;padding-top:4px;">total active</span>
+          </div>
+          <div class="kpi-div"></div>
+          <div class="kpi-cell" data-nav onclick="showView('audit')" title="View audit log">
+            <span class="kpi-cell-label">Resolved / Week</span>
+            <span class="kpi-cell-value good">124</span>
+            <span class="kpi-cell-sub">↑ 18% vs prior wk</span>
+          </div>
+          <div class="kpi-div"></div>
+          <div class="kpi-cell" data-nav onclick="showView('workflows')" title="View workflow queue">
+            <span class="kpi-cell-label">Mean Time to Resolve</span>
+            <span class="kpi-cell-value accent">3.2<span style="font-size:14px;color:var(--t2);">h</span></span>
+            <span class="kpi-cell-sub">Auto-closed 61 · Escalated 8</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── CATEGORY RING ── -->
+      <div class="panel p-category no-bottom">
+        <div class="panel-head">
+          <span class="panel-label">Risk Categories</span>
+          <span class="panel-id">— 005</span>
+        </div>
+        <div class="category-inner">
+          <div class="cat-ring-area">
+            <svg class="cat-ring-svg" viewBox="0 0 120 120">
+              <!-- Background rings -->
+              <circle cx="60" cy="60" r="50" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="1"/>
+              <circle cx="60" cy="60" r="38" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+              <circle cx="60" cy="60" r="26" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
+              <!-- Axis lines -->
+              <line x1="60" y1="8" x2="60" y2="112" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+              <line x1="8" y1="60" x2="112" y2="60" stroke="rgba(255,255,255,0.04)" stroke-width="0.5"/>
+              <!-- Data arcs (strokes on circles) -->
+              <!-- Financial 32%: arc on r=50 -->
+              <circle cx="60" cy="60" r="50" fill="none" stroke="var(--accent)" stroke-width="2"
+                stroke-dasharray="100.5 214.5" stroke-dashoffset="53.6" stroke-linecap="square"/>
+              <!-- Security 24%: arc on r=38 -->
+              <circle cx="60" cy="60" r="38" fill="none" stroke="var(--t1)" stroke-width="1.5"
+                stroke-dasharray="57.2 181.8" stroke-dashoffset="172.9" stroke-linecap="square"/>
+              <!-- Compliance 28%: arc on r=26 -->
+              <circle cx="60" cy="60" r="26" fill="none" stroke="var(--crit)" stroke-width="1.5"
+                stroke-dasharray="45.7 117.6" stroke-dashoffset="118.4" stroke-linecap="square"/>
+              <!-- Ops 16%: arc on r=50 thin -->
+              <circle cx="60" cy="60" r="44" fill="none" stroke="var(--t2)" stroke-width="0.8"
+                stroke-dasharray="44.2 232.8" stroke-dashoffset="163" stroke-linecap="square" opacity="0.8"/>
+            </svg>
+            <div class="cat-ring-center">
+              <span class="cat-ring-num">4</span>
+              <span class="cat-ring-sub">domains</span>
+            </div>
+          </div>
+          <div class="cat-table">
+            <div class="cat-row" data-nav onclick="showView('alerts', {category:'financial'})" title="View financial risks">
+              <div class="cat-tick fin"></div>
+              <span class="cat-name">Financial</span>
+              <div class="cat-track"><div class="cat-fill fin" style="width:0%" data-w="100%"></div></div>
+              <span class="cat-pct">32%</span>
+            </div>
+            <div class="cat-row" data-nav onclick="showView('alerts', {category:'security'})" title="View security risks">
+              <div class="cat-tick sec"></div>
+              <span class="cat-name">Security</span>
+              <div class="cat-track"><div class="cat-fill sec" style="width:0%" data-w="75%"></div></div>
+              <span class="cat-pct">24%</span>
+            </div>
+            <div class="cat-row" data-nav onclick="showView('alerts', {category:'compliance'})" title="View compliance risks">
+              <div class="cat-tick comp"></div>
+              <span class="cat-name">Compliance</span>
+              <div class="cat-track"><div class="cat-fill comp" style="width:0%" data-w="88%"></div></div>
+              <span class="cat-pct">28%</span>
+            </div>
+            <div class="cat-row" data-nav onclick="showView('alerts', {category:'operational'})" title="View operational risks">
+              <div class="cat-tick ops"></div>
+              <span class="cat-name">Operations</span>
+              <div class="cat-track"><div class="cat-fill ops" style="width:0%" data-w="50%"></div></div>
+              <span class="cat-pct">16%</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── DEPT CHART ── -->
+      <div class="panel p-dept no-right no-bottom">
+        <div class="panel-head">
+          <span class="panel-label">By Department</span>
+          <span class="panel-id">— 006</span>
+        </div>
+        <div class="dept-inner">
+          <div class="dept-row" data-nav onclick="showView('alerts', {department:'Finance'})" title="View Finance risks">
+            <span class="dept-name">Finance</span>
+            <div class="dept-track"><div class="dept-fill c" style="width:0%" data-w="82%"></div></div>
+            <span class="dept-count">18</span>
+          </div>
+          <div class="dept-row" data-nav onclick="showView('alerts', {department:'Eng'})" title="View Eng risks">
+            <span class="dept-name">Eng</span>
+            <div class="dept-track"><div class="dept-fill h" style="width:0%" data-w="64%"></div></div>
+            <span class="dept-count">14</span>
+          </div>
+          <div class="dept-row" data-nav onclick="showView('alerts', {department:'HR'})" title="View HR risks">
+            <span class="dept-name">HR</span>
+            <div class="dept-track"><div class="dept-fill m" style="width:0%" data-w="41%"></div></div>
+            <span class="dept-count">9</span>
+          </div>
+          <div class="dept-row" data-nav onclick="showView('alerts', {department:'Sales'})" title="View Sales risks">
+            <span class="dept-name">Sales</span>
+            <div class="dept-track"><div class="dept-fill m" style="width:0%" data-w="36%"></div></div>
+            <span class="dept-count">8</span>
+          </div>
+          <div class="dept-row" data-nav onclick="showView('alerts', {department:'Legal'})" title="View Legal risks">
+            <span class="dept-name">Legal</span>
+            <div class="dept-track"><div class="dept-fill l" style="width:0%" data-w="23%"></div></div>
+            <span class="dept-count">5</span>
+          </div>
+          <div class="dept-row" data-nav onclick="showView('alerts', {department:'Ops'})" title="View Ops risks">
+            <span class="dept-name">Ops</span>
+            <div class="dept-track"><div class="dept-fill l" style="width:0%" data-w="14%"></div></div>
+            <span class="dept-count">3</span>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+<!-- ═══ VIEW OVERLAYS ═══════════════════════════════════ -->
+<!-- These sit inside .main, absolutely positioned over .content -->
+
+</div><!-- /shell -->
+
+<!-- VIEW OVERLAYS — mounted outside shell, cover full main area via JS positioning -->
+<div id="view-alerts" class="view-overlay" style="position:fixed;left:52px;top:44px;right:0;bottom:0;">
+  <div class="view-topbar">
+    <span class="view-title">Alerts</span>
+    <span class="view-path" id="alerts-view-path">risk / alerts / active</span>
+    <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--crit);" id="alerts-filter-badge">12 CRITICAL · 15 HIGH</span>
+    <button class="view-back" onclick="showView('overview')">← Overview</button>
+  </div>
+  <div class="view-body">
+    <table class="alert-table">
+      <thead><tr>
+        <th style="width:70px;">Severity</th>
+        <th>Description</th>
+        <th style="width:110px;">Source</th>
+        <th style="width:90px;">Category</th>
+        <th style="width:60px;">Confidence</th>
+        <th style="width:120px;">Timestamp</th>
+        <th style="width:60px;">Action Req.</th>
+      </tr></thead>
+      <tbody id="alerts-tbody"></tbody>
+    </table>
+  </div>
+</div>
+
+<div id="view-policy" class="view-overlay" style="position:fixed;left:52px;top:44px;right:0;bottom:0;">
+  <div class="view-topbar">
+    <span class="view-title">Policy Registry</span>
+    <span class="view-path">risk / policy / active</span>
+    <button class="view-back" onclick="showView('overview')">← Overview</button>
+  </div>
+  <div class="view-body" style="overflow:hidden;height:calc(100vh - 44px - 44px);">
+    <div class="policy-grid" style="height:100%;">
+      <div class="policy-list" id="policy-list"></div>
+      <div class="policy-detail" id="policy-detail">
+        <div style="font-family:var(--mono);font-size:10px;color:var(--t3);margin-top:40px;text-align:center;">Select a policy to view details</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="view-workflows" class="view-overlay" style="position:fixed;left:52px;top:44px;right:0;bottom:0;">
+  <div class="view-topbar">
+    <span class="view-title">Workflow Queue</span>
+    <span class="view-path">risk / workflows / open</span>
+    <span style="margin-left:auto;font-family:var(--mono);font-size:9px;color:var(--t2);">23 OPEN · 8 PENDING REVIEW</span>
+    <button class="view-back" onclick="showView('overview')">← Overview</button>
+  </div>
+  <div class="view-body">
+    <div class="wf-item header">
+      <div class="wf-cell label">Workflow ID</div>
+      <div class="wf-cell label">Status</div>
+      <div class="wf-cell label">Assigned To</div>
+      <div class="wf-cell label">Risk Event</div>
+      <div class="wf-cell label">Age</div>
+    </div>
+    <div id="wf-list-body"></div>
+  </div>
+</div>
+
+<div id="view-audit" class="view-overlay" style="position:fixed;left:52px;top:44px;right:0;bottom:0;">
+  <div class="view-topbar">
+    <span class="view-title">Audit Log</span>
+    <span class="view-path">risk / audit / all</span>
+    <button class="view-back" onclick="showView('overview')">← Overview</button>
+  </div>
+  <div class="view-body">
+    <div class="audit-row head">
+      <div class="audit-cell label">Timestamp</div>
+      <div class="audit-cell label">User</div>
+      <div class="audit-cell label">Action</div>
+      <div class="audit-cell label">Target</div>
+      <div class="audit-cell label">Result</div>
+    </div>
+    <div id="audit-list-body"></div>
+  </div>
+</div>
+
+<div id="view-settings" class="view-overlay" style="position:fixed;left:52px;top:44px;right:0;bottom:0;">
+  <div class="view-topbar">
+    <span class="view-title">Settings</span>
+    <span class="view-path">risk / settings / system</span>
+    <button class="view-back" onclick="showView('overview')">← Overview</button>
+  </div>
+  <div class="view-body">
+    <div class="settings-grid">
+      <div class="settings-section">
+        <div class="ss-title">Detection Engine</div>
+        <div class="ss-row"><span class="ss-label">Real-time monitoring</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Auto-escalation</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Cross-system correlation</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Historical baseline</span><div class="ss-toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Confidence threshold</span><span class="ss-val">≥ 70%</span></div>
+        <div class="ss-row"><span class="ss-label">Scan interval</span><span class="ss-val">15s</span></div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">Alert Routing</div>
+        <div class="ss-row"><span class="ss-label">Critical → Slack #incidents</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">High → Email digest</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">PagerDuty integration</span><div class="ss-toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Webhook on Critical</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Default assignee</span><span class="ss-val">SR / risk-team</span></div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">Data Sources</div>
+        <div class="ss-row"><span class="ss-label">Slack / Teams</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Jira / GitHub</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">ERP / Finance</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">HRIS</span><div class="ss-toggle" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">CRM</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+        <div class="ss-row"><span class="ss-label">Access logs</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+      <div class="settings-section">
+        <div class="ss-title">System</div>
+        <div class="ss-row"><span class="ss-label">Version</span><span class="ss-val">2.4.1</span></div>
+        <div class="ss-row"><span class="ss-label">Model</span><span class="ss-val">claude-sonnet-4</span></div>
+        <div class="ss-row"><span class="ss-label">Tenant</span><span class="ss-val">enterprise-01</span></div>
+        <div class="ss-row"><span class="ss-label">Retention</span><span class="ss-val">90 days</span></div>
+        <div class="ss-row"><span class="ss-label">Audit logging</span><div class="ss-toggle on" onclick="this.classList.toggle('on')"></div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Clock ──────────────────────────────────────────
+(function tick() {
+  document.getElementById('topbar-clock').textContent = new Date().toTimeString().split(' ')[0];
+  setTimeout(tick, 1000);
+})();
+
+// ── Timeline chart hover (yellow line stats) ─────────
+const TIMELINE_POINTS = [
+  { x:0,   yAll:58, yCrit:65, allEvents:12, critEvents:3 },
+  { x:60,  yAll:47, yCrit:61, allEvents:21, critEvents:4 },
+  { x:120, yAll:52, yCrit:67, allEvents:18, critEvents:5 },
+  { x:180, yAll:33, yCrit:58, allEvents:32, critEvents:5 },
+  { x:240, yAll:39, yCrit:63, allEvents:28, critEvents:6 },
+  { x:300, yAll:22, yCrit:54, allEvents:38, critEvents:7 },
+  { x:340, yAll:31, yCrit:60, allEvents:31, critEvents:6 },
+  { x:400, yAll:14, yCrit:52, allEvents:42, critEvents:8 },
+  { x:460, yAll:26, yCrit:56, allEvents:26, critEvents:7 },
+  { x:520, yAll:18, yCrit:48, allEvents:22, critEvents:5 },
+  { x:560, yAll:20, yCrit:51, allEvents:20, critEvents:4 },
+  { x:600, yAll:15, yCrit:51, allEvents:15, critEvents:4 }
+].map(p => {
+  const h = Math.floor((p.x / 600) * 24);
+  const m = Math.round(((p.x / 600) * 24 % 1) * 60);
+  return { ...p, time: (h < 10 ? '0' : '') + h + ':' + (m < 10 ? '0' : '') + m };
+});
+
+(function initTimelineHover() {
+  const container = document.getElementById('timelineChartContainer');
+  const svg = document.getElementById('timelineSparkline');
+  const overlay = document.getElementById('chartOverlay');
+  const crosshair = document.getElementById('chartCrosshair');
+  const dot = document.getElementById('chartHoverDot');
+  const tooltip = document.getElementById('chartTooltip');
+  const ttTime = document.getElementById('chartTtTime');
+  const ttAll = document.getElementById('chartTtAll');
+  const ttCrit = document.getElementById('chartTtCrit');
+
+  function svgCoords(ev) {
+    const r = svg.getBoundingClientRect();
+    const x = ((ev.clientX - r.left) / r.width) * 600;
+    return Math.max(0, Math.min(600, x));
+  }
+
+  function nearestPoint(svgX) {
+    let i = 0;
+    for (let j = 0; j < TIMELINE_POINTS.length; j++)
+      if (Math.abs(TIMELINE_POINTS[j].x - svgX) < Math.abs(TIMELINE_POINTS[i].x - svgX)) i = j;
+    return TIMELINE_POINTS[i];
+  }
+
+  overlay.addEventListener('mousemove', function(ev) {
+    const x = svgCoords(ev);
+    const p = nearestPoint(x);
+    crosshair.setAttribute('x1', p.x); crosshair.setAttribute('x2', p.x);
+    crosshair.setAttribute('y1', 0); crosshair.setAttribute('y2', 76);
+    crosshair.style.visibility = 'visible';
+    dot.setAttribute('x', p.x - 3); dot.setAttribute('y', p.yAll - 3);
+    dot.style.visibility = 'visible';
+    ttTime.textContent = p.time;
+    ttAll.textContent = 'ALL: ' + p.allEvents + ' events';
+    ttCrit.textContent = 'CRIT: ' + p.critEvents + ' events';
+    tooltip.classList.add('visible');
+    const r = container.getBoundingClientRect();
+    const px = (p.x / 600) * r.width;
+    const py = (p.yAll / 80) * r.height;
+    tooltip.style.left = Math.max(4, Math.min(r.width - tooltip.offsetWidth - 4, px - tooltip.offsetWidth / 2)) + 'px';
+    tooltip.style.top = Math.max(4, py - 32) + 'px';
+  });
+
+  overlay.addEventListener('mouseleave', function() {
+    crosshair.style.visibility = 'hidden';
+    dot.style.visibility = 'hidden';
+    tooltip.classList.remove('visible');
+  });
+})();
+
+// ── Seg buttons (time range) ───────────────────────
+function getSelectedTimeRange() {
+  const active = document.querySelector('.pseg.active');
+  return (active && active.dataset.range) ? active.dataset.range : '24H';
+}
+
+function updateTimelineRangeLabel() {
+  const el = document.getElementById('timelineRangeLabel');
+  if (el) el.textContent = 'Range: ' + getSelectedTimeRange();
+}
+
+document.querySelectorAll('.pseg').forEach(b => {
+  b.addEventListener('click', function() {
+    this.closest('.panel-seg').querySelectorAll('.pseg').forEach(x => x.classList.remove('active'));
+    this.classList.add('active');
+    updateTimelineRangeLabel();
+  });
+});
+
+// ── View system ────────────────────────────────────
+const VIEWS = ['overview','alerts','policy','workflows','audit','settings'];
+window.alertFilter = null; // optional { severity, category, department } when navigating to alerts
+
+function showView(name, filter) {
+  if (filter) window.alertFilter = filter;
+  else if (name !== 'alerts') window.alertFilter = null;
+
+  document.querySelectorAll('.nav-btn[data-view]').forEach(b => {
+    b.classList.toggle('active', b.dataset.view === name);
+  });
+
+  const pathMap = { overview:'risk / overview / live', alerts:'risk / alerts / active', policy:'risk / policy / active', workflows:'risk / workflows / open', audit:'risk / audit / all', settings:'risk / settings / system' };
+  document.querySelector('.topbar-path').innerHTML = pathMap[name] || '';
+
+  VIEWS.filter(v => v !== 'overview').forEach(v => {
+    const el = document.getElementById('view-' + v);
+    if (el) el.classList.remove('active');
+  });
+
+  if (name !== 'overview') {
+    const el = document.getElementById('view-' + name);
+    if (el) el.classList.add('active');
+    if (name === 'alerts') renderAlerts(window.alertFilter);
+  }
+}
+
+function renderAlerts(filter) {
+  const tbody = document.getElementById('alerts-tbody');
+  const pathEl = document.getElementById('alerts-view-path');
+  const badgeEl = document.getElementById('alerts-filter-badge');
+  if (!tbody) return;
+  let list = ALERTS_DATA;
+  if (filter) {
+    list = ALERTS_DATA.filter(a => {
+      if (filter.severity && a.sev !== filter.severity) return false;
+      if (filter.category && a.cat !== filter.category) return false;
+      if (filter.department) {
+        const src = (a.source || '').toLowerCase();
+        const deptKeys = { finance: ['finance'], eng: ['eng', 'devops'], hr: ['hr'], sales: ['sales'], legal: ['legal', 'compliance'], ops: ['ops', 'devops', 'compliance'] };
+        const key = filter.department.toLowerCase();
+        const terms = deptKeys[key] || [key];
+        if (!terms.some(t => src.includes(t))) return false;
+      }
+      return true;
+    });
+  }
+  if (pathEl) pathEl.textContent = filter ? 'risk / alerts / filtered' : 'risk / alerts / active';
+  if (badgeEl) {
+    if (filter) {
+      const parts = [];
+      if (filter.severity) parts.push(filter.severity);
+      if (filter.category) parts.push(filter.category);
+      if (filter.department) parts.push(filter.department);
+      badgeEl.textContent = 'Filter: ' + parts.join(' · ') + ' → ' + list.length + ' shown';
+      badgeEl.style.color = 'var(--accent)';
+    } else {
+      badgeEl.textContent = '12 CRITICAL · 15 HIGH';
+      badgeEl.style.color = 'var(--crit)';
+    }
+  }
+  tbody.innerHTML = '';
+  list.forEach(a => {
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td><span class="at-sev ${a.sev}">${a.sev.toUpperCase()}</span></td>
+      <td>${a.desc}</td>
+      <td class="at-source">${a.source}</td>
+      <td class="at-source">${a.cat}</td>
+      <td class="at-conf">${a.conf}</td>
+      <td class="at-time">${a.time}</td>
+      <td><span class="at-int ${a.action ? 'yes' : 'no'}"></span></td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Wire nav buttons
+document.querySelectorAll('.nav-btn[data-view]').forEach(b => {
+  b.addEventListener('click', function() {
+    showView(this.dataset.view);
+  });
+});
+
+// ── Animate bars ───────────────────────────────────
+setTimeout(() => {
+  document.querySelectorAll('[data-w]').forEach(el => {
+    el.style.width = el.getAttribute('data-w');
+  });
+}, 500);
+
+// ── Mock data ──────────────────────────────────────
+
+const ALERTS_DATA = [
+  { sev:'Critical', desc:'Vendor payment $2.3M bypassed dual-approval policy', source:'finance · tx-8821', cat:'financial', conf:'97%', time:'14:32:09 UTC', action:true },
+  { sev:'Critical', desc:'Root credentials used in production environment', source:'devops · ssh-log', cat:'security', conf:'99%', time:'13:55:41 UTC', action:true },
+  { sev:'Critical', desc:'SOC 2 control evidence missing for Q1 audit', source:'compliance · jira', cat:'compliance', conf:'91%', time:'11:20:00 UTC', action:true },
+  { sev:'High', desc:'Production deployment without change control ticket', source:'eng · deploy-5943', cat:'operational', conf:'89%', time:'13:11:22 UTC', action:true },
+  { sev:'High', desc:'Contract signed below CFO delegation threshold', source:'legal · docusign', cat:'governance', conf:'84%', time:'12:44:17 UTC', action:false },
+  { sev:'High', desc:'Employee offboarded — system access not revoked', source:'hr · okta', cat:'security', conf:'96%', time:'10:08:33 UTC', action:true },
+  { sev:'Medium', desc:'PII field accessed by unauthorized user role', source:'security · log-22890', cat:'compliance', conf:'76%', time:'11:47:58 UTC', action:false },
+  { sev:'Medium', desc:'CRM deal closed $200K above approved discount band', source:'sales · salesforce', cat:'financial', conf:'72%', time:'09:31:14 UTC', action:false },
+  { sev:'Medium', desc:'Slack message contains unencrypted credentials', source:'slack · #eng-deploy', cat:'security', conf:'81%', time:'08:55:02 UTC', action:false },
+  { sev:'Low', desc:'Invoice submitted without purchase order reference', source:'finance · sap', cat:'operational', conf:'65%', time:'07:12:47 UTC', action:false },
+  { sev:'Low', desc:'Recurring expense report filed 14 days late', source:'hr · concur', cat:'governance', conf:'58%', time:'06:44:11 UTC', action:false },
+];
+
+const POLICIES = [
+  { name:'Dual-Approval Payments', cat:'Financial Controls', owner:'CFO Office', status:'Active', desc:'All outbound payments exceeding $500,000 require explicit approval from both the department head and the CFO before processing. Applies to all payment types including wire transfers, ACH, and vendor disbursements.', rules:['Payment threshold: $500,000','Approvers: Department Head + CFO','Override procedure: Board resolution required','Audit trail: Full log retained 7 years'] },
+  { name:'Change Control Policy', cat:'Engineering / Operations', owner:'CTO Office', status:'Active', desc:'All changes to production systems must be documented via an approved change ticket prior to deployment. Emergency changes must be retroactively documented within 24 hours.', rules:['Change ticket required before deploy','Reviewer: Senior engineer + release manager','Emergency window: 24h retroactive doc','Rollback plan: Mandatory for high-risk changes'] },
+  { name:'Data Access & Privacy', cat:'Security / Compliance', owner:'CISO', status:'Active', desc:'Access to PII, financial records, and confidential data is restricted to role-based permissions. Access must be reviewed quarterly and revoked immediately upon role change or offboarding.', rules:['Role-based access control enforced','Quarterly access reviews mandatory','Offboarding: Revoke within 4 hours','PII access: Logged and alerted on anomaly'] },
+  { name:'Vendor Onboarding', cat:'Procurement', owner:'Procurement', status:'Active', desc:'All new vendors must pass a 3-stage risk assessment covering financial stability, security posture, and regulatory compliance before contract execution.', rules:['Financial check: Credit score ≥ 650','Security: SOC 2 or equivalent required','Sanctions screening: OFAC + EU lists','Contract: Legal sign-off mandatory'] },
+  { name:'Expense Delegation', cat:'Governance', owner:'Finance', status:'Active', desc:'Defines the delegation of authority matrix for expense approvals across the organization. All expenditures must be approved within the applicable tier.', rules:['<$10K: Manager approval','$10K–$100K: Director + Finance','$100K–$500K: VP + CFO','> $500K: Board approval'] },
+];
+
+const policyList = document.getElementById('policy-list');
+const policyDetail = document.getElementById('policy-detail');
+POLICIES.forEach((p, i) => {
+  const item = document.createElement('div');
+  item.className = 'policy-list-item' + (i === 0 ? ' selected' : '');
+  item.innerHTML = `<div class="pli-name">${p.name}</div><div class="pli-cat">${p.cat}</div>`;
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.policy-list-item').forEach(x => x.classList.remove('selected'));
+    item.classList.add('selected');
+    policyDetail.innerHTML = `
+      <div class="pd-title">${p.name}</div>
+      <div class="pd-meta">Category: ${p.cat} &nbsp;·&nbsp; Owner: ${p.owner} &nbsp;·&nbsp; Status: ${p.status}</div>
+      <div class="pd-section">
+        <div class="pd-section-label">Description</div>
+        <div class="pd-section-body">${p.desc}</div>
+      </div>
+      <div class="pd-section">
+        <div class="pd-section-label">Rules</div>
+        ${p.rules.map(r => `<div class="pd-rule">${r}</div>`).join('')}
+      </div>`;
+  });
+  policyList.appendChild(item);
+});
+// Show first policy by default
+policyList.firstChild.click();
+
+const WF_DATA = [
+  { id:'WF-0291', status:'open',     assignee:'S. Reeves',   event:'Vendor payment $2.3M bypass', age:'2h 14m' },
+  { id:'WF-0290', status:'open',     assignee:'M. Chen',     event:'Root credentials in prod',     age:'3h 01m' },
+  { id:'WF-0289', status:'review',   assignee:'J. Park',     event:'Prod deploy no ticket',        age:'4h 45m' },
+  { id:'WF-0288', status:'open',     assignee:'Unassigned',  event:'SOC 2 evidence missing',       age:'5h 36m' },
+  { id:'WF-0287', status:'review',   assignee:'T. Wallace',  event:'Employee access not revoked',  age:'6h 52m' },
+  { id:'WF-0286', status:'pending',  assignee:'S. Reeves',   event:'Contract below CFO threshold', age:'9h 03m' },
+  { id:'WF-0285', status:'resolved', assignee:'M. Chen',     event:'PII unauthorized access',      age:'1d 2h' },
+  { id:'WF-0284', status:'resolved', assignee:'J. Park',     event:'CRM discount band exceeded',   age:'1d 4h' },
+  { id:'WF-0283', status:'resolved', assignee:'T. Wallace',  event:'Unencrypted creds in Slack',   age:'1d 7h' },
+];
+
+const wfBody = document.getElementById('wf-list-body');
+WF_DATA.forEach(w => {
+  const d = document.createElement('div');
+  d.className = 'wf-item';
+  d.innerHTML = `
+    <div class="wf-cell">${w.id}</div>
+    <div class="wf-cell"><span class="wf-status ${w.status}">${w.status.toUpperCase()}</span></div>
+    <div class="wf-cell dim">${w.assignee}</div>
+    <div class="wf-cell dim">${w.event}</div>
+    <div class="wf-cell mono-sm">${w.age}</div>
+  `;
+  wfBody.appendChild(d);
+});
+
+const AUDIT_DATA = [
+  { ts:'14:38:02', user:'S.Reeves', action:'VIEWED',    target:'tx-8821 · finance',      result:'OK' },
+  { ts:'14:35:11', user:'SYSTEM',   action:'DETECTED',  target:'dual-approval bypass',   result:'ALERT' },
+  { ts:'14:12:44', user:'M.Chen',   action:'RESOLVED',  target:'WF-0280',                result:'OK' },
+  { ts:'13:57:09', user:'SYSTEM',   action:'ESCALATED', target:'root-creds · prod',       result:'CRIT' },
+  { ts:'13:22:33', user:'J.Park',   action:'ASSIGNED',  target:'WF-0289 → J.Park',       result:'OK' },
+  { ts:'13:11:22', user:'SYSTEM',   action:'DETECTED',  target:'deploy-5943 · no-ticket', result:'ALERT' },
+  { ts:'12:50:01', user:'T.Wallace',action:'UPDATED',   target:'policy / change-control', result:'OK' },
+  { ts:'12:44:17', user:'SYSTEM',   action:'DETECTED',  target:'contract · CFO threshold','result':'ALERT' },
+  { ts:'11:47:58', user:'SYSTEM',   action:'DETECTED',  target:'PII access · log-22890',  result:'ALERT' },
+  { ts:'11:20:00', user:'SYSTEM',   action:'DETECTED',  target:'SOC2 evidence gap Q1',    result:'CRIT' },
+  { ts:'10:08:33', user:'SYSTEM',   action:'DETECTED',  target:'offboard · access active', result:'ALERT' },
+  { ts:'09:55:21', user:'S.Reeves', action:'EXPORTED',  target:'audit-log / 2026-02',     result:'OK' },
+];
+
+const auditBody = document.getElementById('audit-list-body');
+AUDIT_DATA.forEach(a => {
+  const d = document.createElement('div');
+  d.className = 'audit-row';
+  const rc = a.result === 'CRIT' ? 'var(--crit)' : a.result === 'ALERT' ? 'var(--high)' : 'var(--good)';
+  d.innerHTML = `
+    <div class="audit-cell dim">${a.ts} UTC</div>
+    <div class="audit-cell">${a.user}</div>
+    <div class="audit-cell">${a.action}</div>
+    <div class="audit-cell path">${a.target}</div>
+    <div class="audit-cell" style="color:${rc};font-size:9px;">${a.result}</div>
+  `;
+  auditBody.appendChild(d);
+});
+
+// ── Analyze Event ──────────────────────────────────
+function closeOutput() {
+  document.getElementById('outputOverlay').classList.remove('visible');
+}
+
+async function analyzeEvent() {
+  const input = document.getElementById('eventInput').value.trim();
+  if (!input) { document.getElementById('eventInput').focus(); return; }
+
+  const source = document.getElementById('sourceType').value;
+  const overlay = document.getElementById('outputOverlay');
+  const body = document.getElementById('outputBody');
+  const loading = document.getElementById('outputLoading');
+  const sevTag = document.getElementById('outputSevTag');
+
+  overlay.classList.add('visible');
+  body.innerHTML = '';
+  body.appendChild(loading);
+  loading.style.display = 'flex';
+  sevTag.innerHTML = '';
+
+  const sys = `You are an enterprise-grade AI Risk & Workflow Guardian. Respond ONLY in strict JSON, no markdown, no text outside the JSON object.
+
+Detected risk format:
+{"risk_detected":true,"risk_category":["security"|"financial"|"compliance"|"operational"|"governance"],"severity":"Low"|"Medium"|"High"|"Critical","explanation":"string","evidence":"string","policy_references":["string"],"recommended_action":"string","confidence_score":"0-100%","immediate_intervention_required":true|false}
+
+No risk format:
+{"risk_detected":false,"explanation":"string","confidence_score":"0-100%"}`;
+
+  try {
+    // When opened as file://, browser blocks cross-origin requests (CORS). Use the local server instead.
+    const isFile = (typeof location !== 'undefined' && location.protocol === 'file:');
+    const payload = {
+      model: "claude-sonnet-4-20250514",
+      max_tokens: 1000,
+      system: sys,
+      messages: [{ role: "user", content: `Time scope for context: ${getSelectedTimeRange()}\nSource: ${source}\n\n${input}` }]
+    };
+
+    if (isFile) {
+      loading.style.display = 'none';
+      body.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--t2);line-height:1.6;">
+        <span style="color:var(--crit);">Cannot reach the API from a local file.</span><br><br>
+        Run the app from the local server so Execute Analysis works:<br><br>
+        <code style="background:var(--bg-inset);padding:4px 8px;border-radius:var(--r);">node server.js</code><br><br>
+        Then open <code style="background:var(--bg-inset);padding:2px 6px;border-radius:var(--r);">http://localhost:3456</code><br><br>
+        Set your API key: <code style="background:var(--bg-inset);padding:2px 6px;border-radius:var(--r);">export ANTHROPIC_API_KEY=your_key</code>
+      </div>`;
+      return;
+    }
+
+    const res = await fetch("/api/analyze", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+    const text = await res.text();
+    const contentType = (res.headers.get('Content-Type') || '').toLowerCase();
+    if (contentType.includes('text/html') || (text.trim().startsWith('<') && text.length > 100)) {
+      loading.style.display = 'none';
+      body.innerHTML = `<div style="font-family:var(--mono);font-size:10px;color:var(--t2);line-height:1.6;">
+        <span style="color:var(--crit);">The server returned HTML instead of JSON.</span><br><br>
+        You’re probably using a plain static server (e.g. Live Server or <code>python -m http.server</code>). Use the project’s server so <code>/api/analyze</code> exists:<br><br>
+        <code style="background:var(--bg-inset);padding:4px 8px;border-radius:var(--r);">node server.js</code><br><br>
+        Then open <code style="background:var(--bg-inset);padding:2px 6px;border-radius:var(--r);">http://localhost:3456</code> (not another port).
+      </div>`;
+      return;
+    }
+    let data;
+    try { data = JSON.parse(text); } catch {
+      loading.style.display = 'none';
+      body.innerHTML = `<div style="font-family:var(--mono);font-size:9px;color:var(--crit);">ERR: Invalid response from server.</div>`;
+      return;
+    }
+    if (!res.ok && data.error) {
+      loading.style.display = 'none';
+      body.innerHTML = `<div style="font-family:var(--mono);font-size:9px;color:var(--crit);">ERR: ${data.error}</div>`;
+      return;
+    }
+    const raw = (data.content || []).map(b => b.text || '').join('');
+
+    let parsed;
+    try { parsed = JSON.parse(raw.replace(/```json|```/g, '').trim()); }
+    catch { parsed = null; }
+
+    loading.style.display = 'none';
+    body.innerHTML = '';
+
+    if (!parsed) {
+      body.innerHTML = `<div style="font-family:var(--mono);font-size:9px;color:var(--t2);white-space:pre-wrap;line-height:1.7;">${raw}</div>`;
+      return;
+    }
+
+    const sev = parsed.severity || '';
+    if (parsed.risk_detected) {
+      sevTag.innerHTML = `<span class="output-sev-tag ${sev}">${sev.toUpperCase()}</span>`;
+      if (parsed.immediate_intervention_required) {
+        sevTag.innerHTML += `<span class="output-sev-tag Critical" style="margin-left:4px;">IMMEDIATE</span>`;
+      }
+    } else {
+      sevTag.innerHTML = `<span class="output-sev-tag CLEAR">CLEAR</span>`;
+    }
+
+    const fields = [];
+    fields.push({ key: 'Detection', val: parsed.risk_detected ? 'RISK DETECTED' : 'NO RISK IDENTIFIED', cls: parsed.risk_detected ? 'crit' : 'good' });
+
+    if (parsed.risk_detected) {
+      fields.push({ key: 'Severity', val: parsed.severity, cls: parsed.severity === 'Critical' ? 'crit' : '' });
+      fields.push({ key: 'Categories', tags: parsed.risk_category });
+      fields.push({ key: 'Confidence', val: parsed.confidence_score });
+      fields.push({ key: 'Evidence', val: parsed.evidence });
+      fields.push({ key: 'Explanation', val: parsed.explanation });
+      if (parsed.policy_references?.length) fields.push({ key: 'Policy References', tags: parsed.policy_references });
+      fields.push({ key: 'Recommended Action', action: parsed.recommended_action });
+    } else {
+      fields.push({ key: 'Confidence', val: parsed.confidence_score });
+      fields.push({ key: 'Assessment', val: parsed.explanation });
+    }
+
+    body.innerHTML = fields.map(f => {
+      if (f.tags) return `<div class="rf-row"><div class="rf-key">${f.key}</div><div class="rf-tags">${f.tags.map(t => `<span class="rf-tag">${t}</span>`).join('')}</div></div>`;
+      if (f.action) return `<div class="rf-row"><div class="rf-key">${f.key}</div><div class="rf-action-block">${f.action}</div></div>`;
+      return `<div class="rf-row"><div class="rf-key">${f.key}</div><div class="rf-val ${f.cls||''}">${f.val}</div></div>`;
+    }).join('');
+
+  } catch (err) {
+    loading.style.display = 'none';
+    const msg = err.message || String(err);
+    const isNetwork = msg === 'Failed to fetch' || msg.includes('NetworkError');
+    body.innerHTML = isNetwork
+      ? `<div style="font-family:var(--mono);font-size:9px;color:var(--crit);">ERR: ${msg}</div><div style="font-family:var(--mono);font-size:9px;color:var(--t2);margin-top:8px;">Make sure you opened this page via the local server (node server.js) at <code>http://localhost:3456</code>, not as a file.</div>`
+      : `<div style="font-family:var(--mono);font-size:9px;color:var(--crit);">ERR: ${msg}</div>`;
+  }
+}
+</script>
+</body>
+</html>
