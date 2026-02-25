@@ -1,61 +1,203 @@
-# Risk Guardian
+# 🛡️ Risk Guardian (Demo Version)  
+### AI-Powered Risk Intelligence & Event Analysis Dashboard — Portfolio Demo
 
-Enterprise-style risk intelligence dashboard: timeline, severity breakdown, operational metrics, and AI-powered event analysis (Claude).
+![Node.js](https://img.shields.io/badge/Node.js-18+-green)
+![License](https://img.shields.io/badge/License-MIT-blue)
+![Status](https://img.shields.io/badge/Status-Demo%20Version-orange)
+![AI Powered](https://img.shields.io/badge/AI-Claude-purple)
 
-> **Note:** This is a **portfolio / demo project**. Use it to learn, fork, or extend. Not intended as production software for critical business decisions without additional hardening.
+Risk Guardian (Demo Version) is a lightweight, portfolio-focused risk intelligence dashboard that simulates how modern organizations analyze operational risk using AI.
 
-## Features
+This version is intentionally simplified and mock-driven to demonstrate:
 
-- **Risk Event Timeline** — Interactive chart (6H / 24H / 7D / 30D) with hover stats
-- **Severity & distribution** — CRIT / HIGH / MED / LOW with click-through to filtered alerts
-- **Operational metrics** — Open risks, resolved/week, mean time to resolve
-- **Analyze Event** — Paste a log or transaction; get structured risk assessment (JSON) from Claude
-- **Alerts, Policy, Workflows, Audit, Settings** — Full-screen views with navigation from overview
+<img width="1512" height="756" alt="risk-guardian" src="https://github.com/user-attachments/assets/b70806a4-5959-455c-addb-80941180e8b2" />
 
-## Prerequisites
 
-- **Node.js** (v18+ for `fetch` in the server)
-- **Anthropic API key** for the "Execute Analysis" feature
+- AI-powered structured analysis  
+- Secure API proxy architecture  
+- Enterprise-style dashboard UX  
+- Risk severity modeling  
+- Full-stack integration patterns  
 
-## Quick start
+<img width="1512" height="756" alt="risk-guardian-demo-preview" src="https://github.com/user-attachments/assets/0d4b9012-393d-4ecd-b39c-1403eb2f07de" />
 
-1. Clone the repo and go to the project folder:
-   ```bash
-   cd risk-guardian
-   ```
+---
 
-2. Set your API key (required for Execute Analysis):
-   ```bash
-   export ANTHROPIC_API_KEY=your_anthropic_api_key_here
-   ```
+# ✨ Demo Features
 
-3. Start the app:
-   ```bash
-   node server.js
-   ```
+## 📊 Simulated Risk Timeline
 
-4. Open in a browser:
-   ```
-   http://localhost:3456
-   ```
+Interactive chart with selectable time ranges:
 
-**Important:** Use the URL above. Do not open the HTML file directly (`file://`) — the analysis API will not work due to browser security (CORS).
+- Last 6 Hours  
+- Last 24 Hours  
+- Last 7 Days  
+- Last 30 Days  
 
-## Project structure
+✔️ Mock telemetry generation  
+✔️ Simulated event spikes  
+✔️ Hover-based statistics  
 
-| File | Purpose |
-|------|--------|
-| `risk-guardian-architectural.html` | Single-page app: UI, styles, and client logic |
-| `server.js` | Serves the app and proxies `/api/analyze` to Anthropic (keeps API key server-side) |
+All data is generated dynamically in the browser for demonstration purposes.
 
-## Environment
+---
 
-| Variable | Required | Description |
-|----------|----------|-------------|
-| `ANTHROPIC_API_KEY` | Yes (for analysis) | Your [Anthropic API key](https://console.anthropic.com/) |
+## 🚨 Severity Classification
 
-No database or extra services; all dashboard data is mock for demo purposes.
+Events are categorized into four levels:
 
-## License
+| Level | Description |
+|-------|------------|
+| 🔴 CRIT | Immediate attention required |
+| 🟠 HIGH | Significant operational concern |
+| 🟡 MED | Moderate issue |
+| 🟢 LOW | Minor / informational |
 
-MIT (or your choice).
+✔️ Click-to-filter interaction  
+✔️ Visual proportional breakdown  
+✔️ Demo alert drill-down behavior  
+
+---
+
+## 📈 Operational Metrics (Simulated)
+
+Dashboard-style KPIs:
+
+- Open Risks  
+- Resolved (Last 7 Days)  
+- Mean Time to Resolve (MTTR)  
+- Resolution Trend  
+
+All metrics are mock-generated to simulate a SOC-style dashboard.
+
+---
+
+## 🤖 AI-Powered Event Analysis (Claude)
+
+Users can:
+
+1. Paste a raw log, transaction, or system event  
+2. Click **Execute Analysis**  
+3. Receive structured JSON risk output  
+
+Example output:
+
+```json
+{
+  "risk_level": "HIGH",
+  "risk_score": 78,
+  "category": "Fraud / Transaction Anomaly",
+  "confidence": 0.91,
+  "summary": "Large international transaction from new device and IP",
+  "recommended_actions": [
+    "Temporarily freeze account",
+    "Trigger identity verification",
+    "Escalate to fraud team"
+  ]
+}
+```
+
+✔️ Server-side API proxy  
+✔️ No API key exposure to frontend  
+✔️ Structured output prompting  
+
+---
+
+# 🏗️ Demo Architecture
+
+## Frontend
+- Single Page Application (SPA)
+- Pure HTML + CSS + JavaScript
+- Client-side navigation
+
+## Backend
+- Node.js (v18+)
+- Lightweight HTTP server
+- `/api/analyze` proxy endpoint
+- Native `fetch()` usage
+
+---
+
+# 📂 Project Structure
+
+```
+risk-guardian-demo/
+│
+├── risk-guardian-demo.html
+├── server.js
+└── README.md
+```
+
+---
+
+# 🚀 Quick Start (Demo)
+
+## 1️⃣ Clone
+
+```bash
+git clone https://github.com/your-username/risk-guardian-demo.git
+cd risk-guardian-demo
+```
+
+## 2️⃣ Set API Key
+
+macOS / Linux:
+```bash
+export ANTHROPIC_API_KEY=your_key_here
+```
+
+Windows:
+```powershell
+setx ANTHROPIC_API_KEY "your_key_here"
+```
+
+## 3️⃣ Run
+
+```bash
+node server.js
+```
+
+Open:
+
+```
+http://localhost:3456
+```
+
+---
+
+# 🔐 Security (Demo Scope)
+
+- API key stored server-side only  
+- No database  
+- No authentication  
+- No persistent logging  
+
+This implementation demonstrates integration patterns — not full production hardening.
+
+---
+
+# 🧪 Example Test Input
+
+```
+User ID: 84721
+Transaction: $12,400
+Location: Singapore
+Device: New iPhone
+IP: 203.0.113.45
+Time: 02:13 AM
+```
+
+---
+
+# 📌 Important Notice
+
+> **This is the DEMO version of Risk Guardian.**  
+> It is a portfolio / educational project intended to demonstrate architecture and AI integration patterns.  
+>  
+> It is **not production software** and should not be used for real-world risk, fraud, compliance, or operational decision-making without significant additional engineering, security hardening, and validation.
+
+---
+
+# 📜 License
+
+MIT License
